@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api, Product } from "@/lib/api";
+
+//Componente
+import AddProductModal from "@/components/AddProductModal";
 
 export default function IntentoryPage(){
 
@@ -9,9 +12,13 @@ export default function IntentoryPage(){
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData(){
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const loadData = async () => {
       try{
+        //setLoading(true);
         const data = await api.getProducts();
         setProducts(data);
       }catch(error){
@@ -19,9 +26,17 @@ export default function IntentoryPage(){
       }finally{
         setLoading(false);
       }
+
+    };
+
+    if (loading && products.length === 0){
+      loadData();
     }
-    loadData();
-  }, []);
+    
+    const handleOpenNewProduct = () => {
+      setSelectedProduct(null);
+      setIsModalOpen(true);
+    };
 
   return(
     <main className="min-h-screen bg-slate-50 p-8">
@@ -33,8 +48,11 @@ export default function IntentoryPage(){
         </div>
 
         {/* Boton principal */}
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg">
+        <button 
+          onClick={() => handleOpenNewProduct()}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg">
           + Nuevo Producto
+          
         </button>
       </div>
 
@@ -72,8 +90,25 @@ export default function IntentoryPage(){
                     </span>
                   </td>
                   <td className="p-4 text-center">
-                    <button className="text-blue-600 hover:text-blue-800 font-medium px-2">Editar</button>
-                    <button className="text-red-500 hover:text-red-700 font-medium px-2">Borrar</button>
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(p);
+                        setIsModalOpen(true);
+                      }}
+                      className="text-blue-600 hover:text-blue-800 font-medium px-2">
+                      Editar</button>
+                    <button 
+                      className="text-red-500 hover:text-red-700 font-medium px-2"
+                      onClick={async () => {
+                        try {
+                          await api.deleteProduct(p.id);
+                          await loadData();
+                        } catch (error) {
+                          console.error("Error eliminando el producto: ", error);
+                        }
+                      }}>
+                      Borrar
+                    </button>
                   </td>
                 </tr>
               ))
@@ -81,6 +116,14 @@ export default function IntentoryPage(){
           </tbody>
         </table>
       </div>
+
+      {/* Modal para agregar nuevo producto */}
+      <AddProductModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onRefresh={loadData}
+        productToEdit={selectedProduct} />
+
     </main>
   );
 }

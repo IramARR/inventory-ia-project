@@ -33,5 +33,29 @@ export const api = {
             body: JSON.stringify(product),
         });
         return response.json();
+    },
+
+    async deleteProduct(id: string): Promise<{ success: boolean; message?: string }> {
+        const response = await fetch(`${API_URL}/productos/${id}`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) {
+            throw new Error('Error al eliminar el producto');
+        }
+        return response.json();
+    },
+
+    async updateProduct(id: string, data: Omit<Product, 'id' | 'createdAt'>) {
+        const response = await fetch(`${API_URL}/productos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al actualizar el producto');
+        }
+        return response.json();
     }
+
 };
