@@ -7,7 +7,8 @@ import { createProductSchema, updateProductSchema } from "./schemas/product.sche
 const fastify = Fastify({ logger: true });
 
 await fastify.register(cors, {
-    origin: true // Esto permite peticiones desde cualquier origen
+    origin: true, // Esto permite peticiones desde cualquier origen
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
 })
 
 // Ruta para probar que el servidor sirve
@@ -56,8 +57,13 @@ fastify.put('/productos/:id', async (request, reply) => {
         });
         const { id } = paramsSchema.parse(request.params);
 
+        console.log(request.body);
+
         //Validar si el cuerpo no viene vacio
         const validatedData = updateProductSchema.parse(request.body);
+
+        
+
 
         //Verificar si el cuerpo no viene vacio
         if(Object.keys(validatedData).length === 0){
@@ -73,6 +79,7 @@ fastify.put('/productos/:id', async (request, reply) => {
             data: validatedData as any,
         });
 
+        
         return { success: true, producto: actualizado};
     }catch(error){
         if(error instanceof z.ZodError){
